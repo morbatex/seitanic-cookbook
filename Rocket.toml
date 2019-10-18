@@ -1,0 +1,24 @@
+[global.databases.mongodb]
+url = "mongodb://127.0.0.1:27017/"
+
+
+[development]
+address = "localhost"
+port = 12345
+workers = 2
+log = "normal"
+limits = { forms = 32768 }
+
+[staging]
+address = "0.0.0.0"
+port = 8081
+workers = 2
+log = "normal"
+limits = { forms = 32768 }
+
+[production]
+address = "0.0.0.0"
+port = 8081
+workers = 2
+log = "critical"
+limits = { forms = 32768 }
