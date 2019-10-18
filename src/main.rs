@@ -1,40 +1,40 @@
-#[macro_use]
-extern crate diesel;
+#![feature(proc_macro_hygiene, decl_macro, option_flattening)]
 
-mod schema;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate mongodb;
+#[macro_use] extern crate wither_derive;
+#[macro_use] extern crate rocket;
+#[macro_use] extern crate rocket_contrib;
 
-use diesel::{ExpressionMethods, mysql::MysqlConnection, prelude::*, QueryDsl};
+mod dish;
+mod database;
+mod routes;
+mod users;
+
+use mongodb::ThreadedClient;
+use std::convert::TryFrom;
 
 fn main() {
-    dotenv::dotenv().ok();
-    let con = MysqlConnection::establish(&std::env::var("DATABASE_URL").unwrap()).unwrap();
-    get_dishes(QueryDish{title: None, ingredients: vec!["asd".into(),"second".into()], exgredients: Vec::new() ,chefs: Vec::new(), languages: vec!["ENG".into(), "GER".into()], categories: Vec::new(), events: Vec::new()}, con);
-}
+    let catchers = catchers![];
+    let mut cors = rocket_cors::CorsOptions::default();
+    cors.allow_credentials = true;
+    let cors = cors.to_cors().unwrap();
 
-
-#[derive(Debug)]
-pub struct QueryDish {
-    pub title: Option<String>,
-    pub ingredients: Vec<String>,
-    pub exgredients: Vec<String>,
-    pub chefs: Vec<String>,
-    pub categories: Vec<String>,
-    pub languages: Vec<String>,
-    pub events: Vec<u64>,    
-}
-
-
-pub fn get_dishes(dish: QueryDish, con: MysqlConnection) {
-    use schema::*;
-    let a = ingredient::table.inner_join(ingredient_translation::table)
-                      .inner_join(dish_ingredient::table)
-                      .filter(ingredient_translation::language_name.eq_any(dish.languages))
-                      .filter(ingredient_translation::ingredient_name.eq_any(dish.ingredients))
-                      .order_by(dish_ingredient::dish_id.asc())
-                      .select((dish_ingredient::dish_id,dish_ingredient::ingredient_id))
-                      .distinct()
-                      //.select(dish_ingredient::dish_id)
-                      .load::<(u64,u64)>(&con)
-                      ;
-    dbg!(a.unwrap());
+    let rock = rocket::ignite().mount("/",routes::get_routes()).register(catchers).attach(database::Mongo::fairing()).attach(cors);
+    if let (Some(name), Some(password)) = (std::env::var_os("SEI_USER"), std::env::var_os("SEI_PASS")) {
+        if let(Ok(name), Ok(password)) = (name.into_string(), password.into_string()) {
+            if let (Ok(mut user), Ok(dbtable)) = (users::User::try_from(users::Login::new(name, password)), rock.config().get_table("databases")) {
+                if let Some(rocket::config::Value::Table(mongo)) = dbtable.get("mongodb") {
+                    if let Some(rocket::config::Value::String(mongo_url)) = mongo.get("url") {
+                        if let Ok(con) = mongodb::Client::with_uri(mongo_url) {
+                            let db = con.db("test");
+                            user.admin = true;
+                            database::insert_user(user, db).ok();
+                        }
+                    }
+                }
+            }
+        }
+    } 
+    rock.launch();
 }
