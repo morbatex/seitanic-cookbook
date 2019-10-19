@@ -89,8 +89,8 @@ fn post_login(user: Json<Login>, mut cookies: Cookies, con: Mongo) -> Result<(),
     let token = serde_json::to_string(&token).map_err(|_| rocket::http::Status::InternalServerError)?;
     let cookie = Cookie::build("token", token)
                         .domain("scb.morbatex.com")
-                        .http_only(false)
-                        .same_site(rocket::http::SameSite::Lax)
+                        .http_only(true)
+                        .same_site(rocket::http::SameSite::Strict)
                         .secure(true)
                         .max_age(Duration::hours(32))
                         .finish();
