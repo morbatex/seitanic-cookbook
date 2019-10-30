@@ -12,7 +12,7 @@ pub struct Dish {
 
 impl Dish {
     fn uses_ingredient(&self, ingredient: &Ingredient) -> bool {
-        self.ingredients.contains(ingredient)
+        dbg!(self.ingredients.contains(ingredient))
     }
 
     pub fn uses_all_ingredients(&self, ingredients: &[Ingredient]) -> bool {
@@ -24,15 +24,15 @@ impl Dish {
     }
 
     pub fn was_cooked_by(&self, chef: &Chef) -> bool{
-        self.chefs.contains(chef)
+        dbg!(self.chefs.contains(chef))
     }
 
     pub fn name_contains(&self, name: &str) -> bool {
-        self.name.contains(name)
+        caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(name))
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 pub struct Chef {
     name: String,
 }
@@ -41,6 +41,13 @@ impl From<String> for Chef {
 
     fn from(name: String) -> Self {
         Self{name}
+    }
+}
+
+impl PartialEq for Chef {
+
+    fn eq(&self, other: &Self) -> bool {
+        caseless::default_caseless_match_str(&self.name, &other.name)
     }
 }
 
@@ -56,7 +63,7 @@ pub struct Ingredient {
 impl PartialEq for Ingredient {
     
     fn eq(&self, other: &Self) -> bool {
-        self.name == other.name
+        caseless::default_caseless_match_str(&self.name, &other.name)
     }
 }
 

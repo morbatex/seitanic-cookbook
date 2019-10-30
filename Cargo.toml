@@ -18,6 +18,7 @@ chrono = "0.4.9"
 zxcvbn = "1.0.2"
 base64 = "0.10.1"
 rocket_cors = "0.5.0"
+caseless = "0.2.1"
 
 [dependencies.rocket_contrib]
 version = "0.4.2"
