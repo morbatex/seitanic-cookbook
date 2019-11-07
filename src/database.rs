@@ -21,6 +21,17 @@ pub fn insert_dish(mut dish: Dish, con: std::sync::Arc<mongodb::db::DatabaseInne
     dish.save(con, None).map_err(|_| rocket::http::Status::InternalServerError)
 }
 
+pub fn delete_dish(dish: Dish, con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Result<(),rocket::http::Status> {
+    dish.delete(con).map_err(|_| rocket::http::Status::InternalServerError)
+}
+
+
+pub fn update_dish(dish: Dish, con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Result<(),rocket::http::Status> {
+    let dish2 = dish.clone();
+    delete_dish(dish, con.clone())?;
+    insert_dish(dish2, con)
+}
+
 pub fn insert_user(mut user: User, con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Result<(),rocket::http::Status> {
     match get_all_users(con.clone())?.iter().find(|u| u.name == user.name) {
         Some(_) => Err(rocket::http::Status::InternalServerError),

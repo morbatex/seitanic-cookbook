@@ -30,7 +30,7 @@ impl From<ObjectId> for Token {
 }
 
 pub fn get_routes() -> std::vec::Vec<rocket::Route> {
-    routes![get_dish, post_dish, post_login, delete_user, get_users, post_user, get_user_type_admin, get_user_type_unknown, get_user_type_user]
+    routes![get_dish, post_dish, push_dish, post_login, delete_user, get_users, post_user, get_user_type_admin, get_user_type_unknown, get_user_type_user]
 }
 
 #[get("/dish?<name>&<ingredients>&<exgredients>&<chef>")]
@@ -44,9 +44,15 @@ fn get_dish(name: Option<String>, ingredients: Option<String>, exgredients: Opti
 }
 
 #[post("/dish", format = "application/json", data = "<dish>")]
-fn post_dish(dish: Json<Dish>, _user: User, con: Mongo) -> Result<rocket::http::Status,rocket::http::Status> {
+fn post_dish(dish: Json<Dish>, _user: User, con: Mongo) -> Result<rocket::http::Status, rocket::http::Status> {
     let dish = dish.into_inner();
     crate::database::insert_dish(dish, (*con).to_owned()).map(|_| rocket::http::Status::Created)
+}
+
+#[put("/dish", format = "application/json", data= "<dish>")]
+fn push_dish(dish:Json<Dish>, _user: User, con: Mongo) -> Result<rocket::http::Status, rocket::http::Status> {
+    let dish = dish.into_inner();
+    crate::database::update_dish(dish, (*con).to_owned()).map(|_| rocket::http::Status::Ok)
 }
 
 #[get("/user")]
