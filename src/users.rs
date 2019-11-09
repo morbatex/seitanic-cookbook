@@ -122,14 +122,12 @@ impl HashAlgo {
     pub fn check<T: Into<String>>(&self, password: T, salt: T, hash: T) -> bool {
         let password = password.into();
         if let (Ok(salt), Ok(hash)) = (base64::decode(&salt.into()), base64::decode(&hash.into())) {
-            println!("b");
             match self {
                 Self::PBKDF2 => {
                     ring::pbkdf2::verify(self.get_algo(), self.get_rounds(), &salt, password.as_bytes(), &hash).is_ok()
                 }
             }
         } else {
-            println!("a");
             false
         }
 
