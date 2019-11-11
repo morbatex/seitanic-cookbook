@@ -11,8 +11,16 @@ pub struct Dish {
 }
 
 impl Dish {
+    pub fn has_id(&self) -> bool {
+        self.id.is_some()
+    }
+
+    pub fn set_id(&mut self, oid: mongodb::oid::ObjectId) {
+        self.id = Some(oid);
+    }
+
     fn uses_ingredient(&self, ingredient: &Ingredient) -> bool {
-        dbg!(self.ingredients.contains(ingredient))
+        self.ingredients.contains(ingredient)
     }
 
     pub fn uses_all_ingredients(&self, ingredients: &[Ingredient]) -> bool {
@@ -23,12 +31,20 @@ impl Dish {
         !ingredients.iter().any(|ingredient| self.uses_ingredient(ingredient))
     }
 
-    pub fn was_cooked_by(&self, chef: &Chef) -> bool{
-        dbg!(self.chefs.contains(chef))
+    pub fn was_cooked_by(&self, chef: &Chef) -> bool {
+        self.chefs.contains(chef)
     }
 
     pub fn name_contains(&self, name: &str) -> bool {
         caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(name))
+    }
+}
+
+impl From<mongodb::oid::ObjectId> for Dish {
+    
+
+    fn from(oid: mongodb::oid::ObjectId) -> Self {
+        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), ingredients: Vec::new(), instruction: String::from("")} 
     }
 }
 
@@ -56,7 +72,7 @@ impl PartialEq for Chef {
 #[derive(Clone, Debug, Deserialize, Eq, Serialize)]
 pub struct Ingredient {
     name: String,
-    amount: i64,
+    amount: String,
     unit: String
 }
 
@@ -70,6 +86,6 @@ impl PartialEq for Ingredient {
 impl From<String> for Ingredient {
     
     fn from(name: String) -> Self {
-        Self{name, amount: 0, unit: "".into()}
+        Self{name, amount: "".into(), unit: "".into()}
     }
 }
