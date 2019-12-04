@@ -1,4 +1,4 @@
-#![feature(proc_macro_hygiene, decl_macro, option_flattening)]
+#![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use] extern crate serde_derive;
 #[macro_use] extern crate mongodb;
