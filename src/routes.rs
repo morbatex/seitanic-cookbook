@@ -4,7 +4,7 @@ use crate::users::{Admin, Login, User};
 
 use chrono::{Duration,Utc};
 use mongodb::oid::ObjectId;
-use rocket::http::{Cookie, Cookies};
+use rocket::{ request::FromRequest, Request, http::{Cookie, Cookies }};
 use rocket_contrib::json::Json;
 use std::convert::TryInto;
 
@@ -100,12 +100,12 @@ fn get_user_type_unknown() -> Json<crate::users::UserType> {
 
 
 #[post("/login", format = "application/json", data = "<user>")]
-fn post_login(user: Json<Login>, mut cookies: Cookies, con: Mongo) -> Result<(),rocket::http::Status> {
+fn post_login(user: Json<Login>, mut cookies: Cookies, host: HostHeader, con: Mongo) -> Result<(),rocket::http::Status> {
     let user = user.into_inner();
     let token: Token = crate::database::get_user(user, (*con).to_owned())?.into();
     let token = serde_json::to_string(&token).map_err(|_| rocket::http::Status::InternalServerError)?;
     let cookie = Cookie::build("token", token)
-                        .domain("scb.morbatex.com")
+                        .domain(host.0)
                         .http_only(true)
                         .same_site(rocket::http::SameSite::Strict)
                         .secure(true)
@@ -113,4 +113,18 @@ fn post_login(user: Json<Login>, mut cookies: Cookies, con: Mongo) -> Result<(),
                         .finish();
     cookies.add_private(cookie);
     Ok(())
+}
+
+
+
+pub struct HostHeader(pub String);
+impl<'a, 'r> FromRequest<'a, 'r> for HostHeader {
+    type Error = ();
+
+    fn from_request(request: &'a Request) -> rocket::request::Outcome<Self, Self::Error> {
+        match request.headers().get_one("Host") {
+            Some(h) => rocket::request::Outcome::Success(HostHeader(h.into())),
+            None => rocket::request::Outcome::Forward(()),
+        }
+    }
 }
