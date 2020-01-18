@@ -6,7 +6,9 @@ pub struct Dish {
     id : Option<mongodb::oid::ObjectId>,
     name: String,
     chefs: Vec<Chef>,
-    ingredients: Vec<Ingredient>,
+    #[serde(rename="ingredients")]
+    unnamed_ingredients: Option<Vec<Ingredient>>,
+    named_ingredients: Option<Vec<NamedIngredient>>,
     instruction: String,
 }
 
@@ -20,7 +22,8 @@ impl Dish {
     }
 
     fn uses_ingredient(&self, ingredient: &Ingredient) -> bool {
-        self.ingredients.contains(ingredient)
+        self.unnamed_ingredients.as_ref().map_or(false, |ingredients| ingredients.contains(ingredient)) ||
+            self.named_ingredients.as_ref().map_or(false, |named_ingredients| named_ingredients.iter().any(|named_ingredient| named_ingredient.ingredients.contains(ingredient)))
     }
 
     pub fn uses_all_ingredients(&self, ingredients: &[Ingredient]) -> bool {
@@ -44,7 +47,7 @@ impl From<mongodb::oid::ObjectId> for Dish {
     
 
     fn from(oid: mongodb::oid::ObjectId) -> Self {
-        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), ingredients: Vec::new(), instruction: String::from("")} 
+        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from("")}
     }
 }
 
@@ -66,7 +69,11 @@ impl PartialEq for Chef {
         caseless::default_caseless_match_str(&self.name, &other.name)
     }
 }
-
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct NamedIngredient {
+    name: String,
+    ingredients: Vec<Ingredient>,
+}
 
 
 #[derive(Clone, Debug, Deserialize, Eq, Serialize)]
