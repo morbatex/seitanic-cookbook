@@ -67,7 +67,7 @@ impl From<String> for Chef {
 impl PartialEq for Chef {
 
     fn eq(&self, other: &Self) -> bool {
-        caseless::default_caseless_match_str(&self.name, &other.name)
+        caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(&other.name))
     }
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
