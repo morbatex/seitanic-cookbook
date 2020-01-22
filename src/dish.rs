@@ -8,6 +8,7 @@ pub struct Dish {
     chefs: Vec<Chef>,
     #[serde(rename="ingredients")]
     unnamed_ingredients: Option<Vec<Ingredient>>,
+    #[serde(rename="namedIngredients")]
     named_ingredients: Option<Vec<NamedIngredient>>,
     instruction: String,
 }
