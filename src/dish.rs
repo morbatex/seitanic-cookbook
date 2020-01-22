@@ -87,7 +87,7 @@ pub struct Ingredient {
 impl PartialEq for Ingredient {
     
     fn eq(&self, other: &Self) -> bool {
-        caseless::default_caseless_match_str(&self.name, &other.name)
+        caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(&other.name))
     }
 }
 
