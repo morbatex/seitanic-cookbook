@@ -23,8 +23,8 @@ impl Dish {
     }
 
     fn uses_ingredient(&self, ingredient: &Ingredient) -> bool {
-        self.unnamed_ingredients.as_ref().map_or(false, |ingredients| ingredients.contains(ingredient)) ||
-            self.named_ingredients.as_ref().map_or(false, |named_ingredients| named_ingredients.iter().any(|named_ingredient| named_ingredient.ingredients.contains(ingredient)))
+        self.unnamed_ingredients.as_ref().map_or(false, |ingredients| ingredients.iter().any(|ingred| ingred.name_contains(ingredient))) ||
+            self.named_ingredients.as_ref().map_or(false, |named_ingredients| named_ingredients.iter().any(|named_ingredient| named_ingredient.ingredients.iter().any(|ingred| ingred.name_contains(ingredient))))
     }
 
     pub fn uses_all_ingredients(&self, ingredients: &[Ingredient]) -> bool {
@@ -36,7 +36,7 @@ impl Dish {
     }
 
     pub fn was_cooked_by(&self, chef: &Chef) -> bool {
-        self.chefs.contains(chef)
+        self.chefs.iter().any(|ch| ch.name_contains(chef))
     }
 
     pub fn name_contains(&self, name: &str) -> bool {
@@ -52,9 +52,16 @@ impl From<mongodb::oid::ObjectId> for Dish {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Chef {
     name: String,
+}
+
+impl Chef {
+
+    fn name_contains(&self, other: &Self) -> bool {
+        caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(&other.name))
+    }
 }
 
 impl From<String> for Chef {
@@ -64,12 +71,6 @@ impl From<String> for Chef {
     }
 }
 
-impl PartialEq for Chef {
-
-    fn eq(&self, other: &Self) -> bool {
-        caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(&other.name))
-    }
-}
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct NamedIngredient {
     name: String,
@@ -77,18 +78,19 @@ pub struct NamedIngredient {
 }
 
 
-#[derive(Clone, Debug, Deserialize, Eq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Ingredient {
     name: String,
     amount: String,
     unit: String
 }
 
-impl PartialEq for Ingredient {
+impl Ingredient {
     
-    fn eq(&self, other: &Self) -> bool {
+    fn name_contains(&self, other: &Self) -> bool {
         caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(&other.name))
     }
+
 }
 
 impl From<String> for Ingredient {
