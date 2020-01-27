@@ -43,6 +43,10 @@ impl Dish {
     pub fn name_contains(&self, name: &str) -> bool {
         caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(name))
     }
+
+    pub fn is_in_categorie(&self, name: &str) -> bool {
+        self.categories.as_ref().map_or(false, |categories| categories.iter().any(|categorie| caseless::default_case_fold_str(categorie).contains(&caseless::default_case_fold_str(name))))
+    }
 }
 
 impl From<mongodb::oid::ObjectId> for Dish {
