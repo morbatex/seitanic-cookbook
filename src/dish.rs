@@ -11,6 +11,7 @@ pub struct Dish {
     #[serde(rename="namedIngredients")]
     named_ingredients: Option<Vec<NamedIngredient>>,
     instruction: String,
+    categories: Option<Vec<String>>,
 }
 
 impl Dish {
@@ -48,7 +49,7 @@ impl From<mongodb::oid::ObjectId> for Dish {
     
 
     fn from(oid: mongodb::oid::ObjectId) -> Self {
-        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from("")}
+        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from(""), categories: None}
     }
 }
 
