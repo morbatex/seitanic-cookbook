@@ -5,7 +5,7 @@ use wither::model::Model;
 #[database("mongodb")]
 pub struct Mongo(rocket_contrib::databases::mongodb::db::Database);
 
-pub fn get_dishes(name: Option<String>, ingredients: &[Ingredient], exgredients: &[Ingredient], chef: Option<Chef>, categorie: Option<String>, con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Vec<Dish> {
+pub fn get_dishes(name: Option<String>, ingredients: &[Ingredient], exgredients: &[Ingredient], chef: Option<Chef>, tags: &[String], con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Vec<Dish> {
    
     let dishes: Vec<Dish> = Dish::find(con, None, None).unwrap();
 
@@ -13,7 +13,7 @@ pub fn get_dishes(name: Option<String>, ingredients: &[Ingredient], exgredients:
           .filter(|dish| name.as_ref().map_or(true, |name| dish.name_contains(name)))
           .filter(|dish| dish.uses_all_ingredients(ingredients))
           .filter(|dish| dish.uses_non_ingredients(exgredients))
-          .filter(|dish| categorie.as_ref().map_or(true, |categorie| dish.is_in_categorie(categorie)))
+          .filter(|dish| dish.contains_all_tags(tags))
           .cloned().collect()
 }
 

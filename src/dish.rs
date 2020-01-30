@@ -11,7 +11,7 @@ pub struct Dish {
     #[serde(rename="namedIngredients")]
     named_ingredients: Option<Vec<NamedIngredient>>,
     instruction: String,
-    categories: Option<Vec<String>>,
+    tags: Option<Vec<String>>,
 }
 
 impl Dish {
@@ -43,9 +43,9 @@ impl Dish {
     pub fn name_contains(&self, name: &str) -> bool {
         caseless::default_case_fold_str(&self.name).contains(&caseless::default_case_fold_str(name))
     }
-
-    pub fn is_in_categorie(&self, name: &str) -> bool {
-        self.categories.as_ref().map_or(false, |categories| categories.iter().any(|categorie| caseless::default_case_fold_str(categorie).contains(&caseless::default_case_fold_str(name))))
+    
+    pub fn contains_all_tags(&self, tags: &[String]) -> bool {
+       self.tags.as_ref().map_or(true, |local_tags| tags.iter().all(|tag| local_tags.contains(tag)))
     }
 }
 
@@ -53,7 +53,7 @@ impl From<mongodb::oid::ObjectId> for Dish {
     
 
     fn from(oid: mongodb::oid::ObjectId) -> Self {
-        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from(""), categories: None}
+        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from(""), tags: None}
     }
 }
 

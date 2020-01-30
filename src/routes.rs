@@ -33,15 +33,16 @@ pub fn get_routes() -> std::vec::Vec<rocket::Route> {
     routes![get_dish, post_dish, put_dish, delete_dish, post_login, delete_user, get_users, post_user, get_user_type_admin, get_user_type_unknown, get_user_type_user]
 }
 
-#[get("/dish?<name>&<ingredients>&<exgredients>&<chef>&<categorie>")]
-fn get_dish(name: Option<String>, ingredients: Option<String>, exgredients: Option<String>, chef: Option<String>, categorie: Option<String>, con: Mongo) -> Json<Vec<Dish>>{
+#[get("/dish?<name>&<ingredients>&<exgredients>&<chef>&<tags>")]
+fn get_dish(name: Option<String>, ingredients: Option<String>, exgredients: Option<String>, chef: Option<String>, tags: Option<String>, con: Mongo) -> Json<Vec<Dish>>{
     let chef = chef.map(|ok| ok.into());
-    let ingredients = ingredients.map_or(Vec::new(), |i| serde_json::from_str(&i).ok().map_or(Vec::new(),|vec: Vec<String>| vec));
+    let ingredients = ingredients.map_or(Vec::new(), |i| serde_json::from_str(&i).ok().map_or(Vec::new(), |vec: Vec<String>| vec));
     let ingredients: Vec<_> = ingredients.iter().cloned().map(|s| s.into()).collect(); 
-    let exgredients = exgredients.map_or(Vec::new(), |i| serde_json::from_str(&i).ok().map_or(Vec::new(),|vec: Vec<String>| vec));
+    let exgredients = exgredients.map_or(Vec::new(), |i| serde_json::from_str(&i).ok().map_or(Vec::new(), |vec: Vec<String>| vec));
     let exgredients: Vec<_> = exgredients.iter().cloned().map(|s| s.into()).collect();
-    let categorie = categorie.and_then(|categorie| if categorie.is_empty() { None } else { categorie.into() });
-    Json(crate::database::get_dishes(name, &ingredients, &exgredients, chef, categorie, (*con).to_owned()))
+    let tags = tags.map_or(Vec::new(), |t| serde_json::from_str(&t).ok().map_or(Vec::new(), |vec: Vec<String>| vec));
+    let tags: Vec<_> = tags.iter().cloned().map(|s| s.into()).collect();
+    Json(crate::database::get_dishes(name, &ingredients, &exgredients, chef, &tags, (*con).to_owned()))
 }
 
 #[post("/dish", format = "application/json", data = "<dish>")]
