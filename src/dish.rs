@@ -6,12 +6,13 @@ pub struct Dish {
     id : Option<mongodb::oid::ObjectId>,
     name: String,
     chefs: Vec<Chef>,
-    #[serde(rename="ingredients")]
-    unnamed_ingredients: Option<Vec<Ingredient>>,
-    #[serde(rename="namedIngredients")]
-    named_ingredients: Option<Vec<NamedIngredient>>,
+    #[serde(rename="ingredients", default="Vec::new")]
+    unnamed_ingredients: Vec<Ingredient>,
+    #[serde(rename="namedIngredients", default="Vec::new")]
+    named_ingredients: Vec<NamedIngredient>,
     instruction: String,
-    tags: Option<Vec<String>>,
+    #[serde(default="Vec::new")]
+    tags: Vec<String>,
 }
 
 impl Dish {
@@ -24,8 +25,7 @@ impl Dish {
     }
 
     fn uses_ingredient(&self, ingredient: &Ingredient) -> bool {
-        self.unnamed_ingredients.as_ref().map_or(false, |ingredients| ingredients.iter().any(|ingred| ingred.name_contains(ingredient))) ||
-            self.named_ingredients.as_ref().map_or(false, |named_ingredients| named_ingredients.iter().any(|named_ingredient| named_ingredient.ingredients.iter().any(|ingred| ingred.name_contains(ingredient))))
+        self.unnamed_ingredients.iter().any(|ing| ing.name_contains(ingredient)) || self.named_ingredients.iter().any(|unnamed_ingredient| unnamed_ingredient.ingredients.iter().any(|ing| ing.name_contains(ingredient)))
     }
 
     pub fn uses_all_ingredients(&self, ingredients: &[Ingredient]) -> bool {
@@ -45,7 +45,7 @@ impl Dish {
     }
     
     pub fn contains_all_tags(&self, tags: &[String]) -> bool {
-       self.tags.as_ref().map_or(true, |local_tags| tags.iter().all(|tag| local_tags.contains(tag)))
+        tags.iter().all(|tag| self.tags.contains(tag))
     }
 }
 
@@ -53,7 +53,7 @@ impl From<mongodb::oid::ObjectId> for Dish {
     
 
     fn from(oid: mongodb::oid::ObjectId) -> Self {
-        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: None, named_ingredients: None, instruction: String::from(""), tags: None}
+        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: Vec::new(), named_ingredients: Vec::new(), instruction: String::from(""), tags: Vec::new()}
     }
 }
 
