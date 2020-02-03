@@ -49,3 +49,11 @@ pub fn get_user(user: Login, con: std::sync::Arc<mongodb::db::DatabaseInner>) ->
         Err(rocket::http::Status::Unauthorized)
     }
 }
+
+pub fn add_image<D: Into<Dish>>(dish: D, images: Vec<String>, con: std::sync::Arc<mongodb::db::DatabaseInner>) -> Result<(), rocket::http::Status> {
+    let dish = dish.into();
+    for image in images {
+        dish.clone().update(con.clone(), None, doc!{"$push": {"images": image}}, None).map_err(|_| rocket::http::Status::InternalServerError)?;
+    }
+    Ok(())
+}

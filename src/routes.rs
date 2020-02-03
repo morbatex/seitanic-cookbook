@@ -30,7 +30,7 @@ impl From<ObjectId> for Token {
 }
 
 pub fn get_routes() -> std::vec::Vec<rocket::Route> {
-    routes![get_dish, post_dish, put_dish, delete_dish, post_login, delete_user, get_users, post_user, get_user_type_admin, get_user_type_unknown, get_user_type_user]
+    routes![get_dish, post_dish, put_dish, delete_dish, post_image, post_login, delete_user, get_users, post_user, get_user_type_admin, get_user_type_unknown, get_user_type_user]
 }
 
 #[get("/dish?<name>&<ingredients>&<exgredients>&<chef>&<tags>")]
@@ -66,6 +66,13 @@ fn put_dish(id: String, dish: Json<Dish>, _user: User, con: Mongo) -> Result<roc
 fn delete_dish(id: String, _user: User, con: Mongo) -> Result<rocket::http::Status, rocket::http::Status> {
     let dish = mongodb::oid::ObjectId::with_string(&id).map_err(|_| rocket::http::Status::BadRequest)?.into();
     crate::database::delete_dish(dish, (*con).to_owned()).map(|_| rocket::http::Status::Ok)
+}
+
+#[post("/dish/<id>/image", data="<images>")]
+fn post_image(id: String, images: crate::upload::MulitpartData, _user: User, con: Mongo) -> Result<rocket::http::Status, rocket::http::Status> {
+    let images = images.process()?;
+    crate::database::add_image(mongodb::oid::ObjectId::with_string(&id).map_err(|_| rocket::http::Status::BadRequest)?, images, (*con).to_owned())?;
+    Ok(rocket::http::Status::Ok)
 }
 
 #[get("/user")]
