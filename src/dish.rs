@@ -1,6 +1,6 @@
 use mongodb::coll::options::IndexModel;
 
-#[derive(Clone, Debug, Deserialize, Model, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Model, Serialize)]
 pub struct Dish {
     #[serde(rename="_id", skip_serializing_if="Option::is_none")]
     id : Option<mongodb::oid::ObjectId>,
@@ -13,6 +13,8 @@ pub struct Dish {
     instruction: String,
     #[serde(default="Vec::new")]
     tags: Vec<String>,
+    #[serde(default="Vec::new")]
+    images: Vec<String>,
 }
 
 impl Dish {
@@ -53,7 +55,7 @@ impl From<mongodb::oid::ObjectId> for Dish {
     
 
     fn from(oid: mongodb::oid::ObjectId) -> Self {
-        Self{id: Some(oid), name: String::from(""), chefs: Vec::new(), unnamed_ingredients: Vec::new(), named_ingredients: Vec::new(), instruction: String::from(""), tags: Vec::new()}
+        Self{id: Some(oid), ..Default::default()}
     }
 }
 
