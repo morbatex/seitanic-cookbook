@@ -25,4 +25,4 @@ tree_magic = "0.2.1"
 [dependencies.rocket_contrib]
 version = "0.4.2"
 default_features = false
-features = ["json", "mongodb_pool"]
+features = ["json", "mongodb_pool", "serve"]
