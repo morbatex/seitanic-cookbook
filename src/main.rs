@@ -18,8 +18,7 @@ use std::convert::TryFrom;
 fn main() {
     std::fs::create_dir_all("images").unwrap();
     let catchers = catchers![];
-    let cors = rocket_cors::CorsOptions{allow_credentials: true, ..Default::default()}.to_cors().unwrap();
-    let rock = rocket::ignite().mount("/",routes::get_routes()).register(catchers).attach(database::Mongo::fairing()).attach(cors);
+    let rock = rocket::ignite().mount("/",routes::get_routes()).register(catchers).attach(database::Mongo::fairing());
     if let (Some(name), Some(password)) = (std::env::var_os("SEI_USER"), std::env::var_os("SEI_PASS")) {
         if let(Ok(name), Ok(password)) = (name.into_string(), password.into_string()) {
             if let (Ok(mut user), Ok(dbtable)) = (users::User::try_from(users::Login::new(name, password)), rock.config().get_table("databases")) {

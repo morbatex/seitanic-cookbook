@@ -114,10 +114,10 @@ fn post_login(user: Json<Login>, mut cookies: Cookies, host: HostHeader, con: Mo
     let token: Token = crate::database::get_user(user, (*con).to_owned())?.into();
     let token = serde_json::to_string(&token).map_err(|_| rocket::http::Status::InternalServerError)?;
     let cookie = Cookie::build("token", token)
-                        //.domain(host.0)
+                        .domain(host.0)
                         .http_only(true)
                         .same_site(rocket::http::SameSite::Strict)
-                        .secure(false)
+                        .secure(true)
                         .max_age(Duration::hours(32))
                         .finish();
     cookies.add_private(cookie);
