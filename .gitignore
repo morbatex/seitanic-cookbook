@@ -2,3 +2,4 @@
 Rocket.toml
 /target
 **/*.rs.bk
+.idea/

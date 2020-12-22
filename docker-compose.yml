@@ -1,0 +1,64 @@
+version: "3.2"
+
+services:
+  db:
+    image: mongo
+    volumes:
+      #- /etc/localtime:/etc/localtime:ro
+      #- /etc/timezone:/etc/timezone:ro
+      - seitanic-mongo:/data/db
+        #environment:
+      #- MONGO_INITDB_ROOT_USERNAME=seitan
+      #- MONGO_INITDB_ROOT_PASSWORD=seitan1
+      #- MONGO_INITDB_DATABASE=seitan
+    networks:
+      - back
+
+
+  frontend:
+    image: morbatex/seitanic-cookbook-frontend:latest
+    ports:
+      - 8081:80
+    environment:
+      - BACKEND_URL= http://127.0.0.1:8080
+    depends_on:
+      - db
+    networks:
+      - back
+
+  backend:
+    image: morbatex/seitanic-cookbook-backend:latest
+    environment:
+      - ROCKET_SECRET_KEY=ritv0FybzZmKDXYgIX3dxfoXiBufcsuntT57BEhNKW8=
+      - ROCKET_DATABASES={mongodb={url="mongodb://db"}}
+    ports:
+      - 8080:80
+    networks:
+      #- traefik-public
+      - back
+    depends_on:
+      - db
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.constraint-label=traefik-public
+        - traefik.http.routers.firefox-sync-http.rule=Host(`firefox.morbatex.com`)
+        - traefik.http.routers.firefox-sync-http.entrypoints=http
+        - traefik.http.routers.firefox-sync-http.middlewares=https-redirect
+        - traefik.http.routers.firefox-sync-https.rule=Host(`firefox.morbatex.com`)
+        - traefik.http.routers.firefox-sync-https.entrypoints=https
+        - traefik.http.routers.firefox-sync-https.tls=true
+        - traefik.http.routers.firefox-sync-https.tls.certresolver=morbatexcom
+        - traefik.http.routers.firefox-sync-https.tls.domains[0].main=morbatex.com
+        - traefik.http.routers.firefox-sync-https.tls.domains[0].sans=*.morbatex.com
+        - traefik.http.routers.firefox-sync-https.middlewares=hsts
+        - traefik.http.services.firefox-sync.loadbalancer.server.port=5000
+
+networks:
+  #traefik-public:
+  #  external: true
+  back:
+
+volumes:
+  seitanic-mongo:
